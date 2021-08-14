@@ -1,3 +1,4 @@
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:repeat_mehrdadproject/app_properties.dart';
 import 'package:repeat_mehrdadproject/custom_background.dart';
 // import 'package:repeat_mehrdadproject/models/product.dart';
@@ -40,7 +41,7 @@ Future<Map<String, dynamic>> get_profile ( String token) async {
 
   //print("Body: " + body);
 
-  var response = await http.get(url,
+  var response = await http.get(Uri.parse(url),
       headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
 //      body: body
   );
@@ -93,7 +94,7 @@ String selectedTimeline = 'Weekly featured';
 
 class _MainPageState extends State<MainPage>
     with TickerProviderStateMixin<MainPage> {
-
+  bool check_is_any_true=false;
   bool _isLoading = true;
   String mobile="";
   int coin=2;
@@ -155,10 +156,29 @@ class _MainPageState extends State<MainPage>
     coin=response["data"]["coin"]["coin"];
     mobile=response["data"]["mobile"];
 
+
+    var accounts=response["data"]["accounts"];
+    print('here');
+    print(accounts);
+    print(accounts.length);
+    check_is_any_true=false;
+    for(int i=0;i<accounts.length;i++){
+      print(accounts[i]["allow_action"]);
+      check_is_any_true=check_is_any_true||accounts[i]["allow_action"];
+    }
+    print(check_is_any_true);
+
+    print('here');
+
+
     setState(() {
       _isLoading = false; // your loder will stop to finish after the data fetch
     });
 
+  }
+  void callback() {
+    print('g');
+    this.dataLoadFunction();
   }
 
 
@@ -708,9 +728,14 @@ class _MainPageState extends State<MainPage>
                         mainAxisAlignment : MainAxisAlignment.spaceEvenly,
 //                              crossAxisAlignment : CrossAxisAlignment.start,
                         children: [
+
                           InkWell(
-                            onTap: (){},
+
+
+
+                            onTap: null,
                             child: Container(
+
                               height: MediaQuery.of(context).size.width/3.5,
                               width: MediaQuery.of(context).size.width/3.5,
                               padding: const EdgeInsets.only(left: 5.0, right:5.0),
@@ -728,8 +753,8 @@ class _MainPageState extends State<MainPage>
                                 mainAxisAlignment :MainAxisAlignment.spaceEvenly,
                                 children: [
 
-                                  Icon(Icons.favorite,size:  MediaQuery.of(context).size.width/10,),
-                                  FittedBox(fit: BoxFit.fitWidth, child: AutoSizeText('Make like',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),maxLines: 1)),
+                                  Icon(Icons.favorite,size:  MediaQuery.of(context).size.width/10,color: Colors.black12,),
+                                  FittedBox(fit: BoxFit.fitWidth, child: AutoSizeText('Make like',style: TextStyle(color: Colors.black12,fontWeight: FontWeight.bold,fontSize: 20),maxLines: 1)),
                                 ],
                               ),
                             ),
@@ -738,10 +763,17 @@ class _MainPageState extends State<MainPage>
 
 
                             onTap: (){
-                              index_dashbord=2;//follow pages
-                              setState(() {
+                              if(check_is_any_true){
+                                index_dashbord=2;//follow pages
+                                setState(() {
 
-                              });
+                                });
+
+                              }
+                              else{
+                                showOkAlertDialog(context:context, title: "All your page can't do actions",message: "Go to the settings and check \"Enable allow action with this account \" then save this or you aren't add any Instagram page");
+                              }
+
 //                            Navigator.of(context)
 //                                .push(MaterialPageRoute(builder: (_) => CategoryListPage()));
 
@@ -786,6 +818,7 @@ class _MainPageState extends State<MainPage>
                             width: MediaQuery.of(context).size.width/3.5,
                             padding: const EdgeInsets.only(left: 5.0, right: 5.0),
                             decoration: BoxDecoration(
+                                // color: Color.fromRGBO(255, 255, 255, 0.2),
                                 color: Color.fromRGBO(255, 255, 255, 0.2),
                                 border: Border.all(color: Colors.black,width: 2),
                                 //                border: Border.all(color: Colors.deepPurple,width: 2),
@@ -798,8 +831,8 @@ class _MainPageState extends State<MainPage>
                             child: Column(
                               mainAxisAlignment :MainAxisAlignment.spaceEvenly,
                               children: [
-                                Icon(Icons.av_timer_rounded,size:  MediaQuery.of(context).size.width/10,),
-                                FittedBox(fit: BoxFit.fitWidth, child:AutoSizeText('See story',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),maxLines: 1)),
+                                Icon(Icons.av_timer_rounded,size:  MediaQuery.of(context).size.width/10,color: Colors.black12,),
+                                FittedBox(fit: BoxFit.fitWidth, child:AutoSizeText('See story',style: TextStyle(color: Colors.black12,fontWeight: FontWeight.bold,fontSize: 20),maxLines: 1)),
                               ],
                             ),
                           ),
@@ -810,6 +843,7 @@ class _MainPageState extends State<MainPage>
                             decoration: BoxDecoration(
 
 
+                                // color: Color.fromRGBO(255, 255, 255, 0.2),
                                 color: Color.fromRGBO(255, 255, 255, 0.2),
                                 border: Border.all(color: Colors.black,width: 2),
                                 //                border: Border.all(color: Colors.deepPurple,width: 2),
@@ -823,8 +857,8 @@ class _MainPageState extends State<MainPage>
                             child: Column(
                               mainAxisAlignment :MainAxisAlignment.spaceEvenly,
                               children: [
-                                Icon(Icons.live_tv_rounded,size:  MediaQuery.of(context).size.width/10,),
-                                FittedBox(fit: BoxFit.fitWidth, child:AutoSizeText('Join live',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),maxLines: 1,)),
+                                Icon(Icons.live_tv_rounded,size:  MediaQuery.of(context).size.width/10,color: Colors.black12,),
+                                FittedBox(fit: BoxFit.fitWidth, child:AutoSizeText('Join live',style: TextStyle(color: Colors.black12,fontWeight: FontWeight.bold,fontSize: 20),maxLines: 1,)),
                               ],
                             ),),
                         ],
@@ -965,7 +999,7 @@ class _MainPageState extends State<MainPage>
 
               ],
             ),
-              CustomBottomBar(controller: bottomTabController,prof_img: widget.image_prof,prof_img_url: widget.img_url,),
+              CustomBottomBar(callback: this.callback,controller: bottomTabController,prof_img: widget.image_prof,prof_img_url: widget.img_url,),
 //            (click_prof)?Positioned(
 //                bottom:10,
 //                right:10 ,

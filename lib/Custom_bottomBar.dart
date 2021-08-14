@@ -3,13 +3,57 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:repeat_mehrdadproject/screens/auth/welcome_back_page.dart';
 import 'package:repeat_mehrdadproject/screens/auth/register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:repeat_mehrdadproject/screens/main/main_page.dart';
+
+import 'package:cached_network_image/cached_network_image.dart';
+
+
+class TooltipShapeBorder extends ShapeBorder {
+  final double arrowWidth;
+  final double arrowHeight;
+  final double arrowArc;
+  final double radius;
+
+  TooltipShapeBorder({
+    this.radius = 16.0,
+    this.arrowWidth = 20.0,
+    this.arrowHeight = 10.0,
+    this.arrowArc = 0.0,
+  }) : assert(arrowArc <= 1.0 && arrowArc >= 0.0);
+
+  @override
+  EdgeInsetsGeometry get dimensions => EdgeInsets.only(bottom: arrowHeight);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection textDirection}) => null;
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection textDirection}) {
+    rect = Rect.fromPoints(rect.topLeft, rect.bottomRight - Offset(0, arrowHeight));
+    double x = arrowWidth, y = arrowHeight, r = 1 - arrowArc;
+    return Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)))
+      ..moveTo(rect.bottomCenter.dx +0.5*x , rect.bottomCenter.dy)
+      ..relativeLineTo(-x / 2 * r, y * r)
+      ..relativeQuadraticBezierTo(-x / 2 * (1 - r), y * (1 - r), -x * (1 - r), 0)
+      ..relativeLineTo(-x / 2 * r, -y * r);
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection textDirection}) {}
+
+  @override
+  ShapeBorder scale(double t) => this;
+}
+
 
 class CustomBottomBar extends StatefulWidget {
   final TabController controller;
   final NetworkImage prof_img;
   final String prof_img_url;
+  final Function callback;
 
-  const CustomBottomBar({Key key, this.controller,this.prof_img,this.prof_img_url}) : super(key: key);
+  const CustomBottomBar({Key key, this.callback,this.controller,this.prof_img,this.prof_img_url}) : super(key: key);
 
   @override
   _CustomBottomBarState createState() => _CustomBottomBarState();
@@ -33,23 +77,25 @@ class _CustomBottomBarState extends State<CustomBottomBar> {
 
 
       children: [
-        (click_prof)?Spacer(flex: 50,):null,
+        (click_prof)?Spacer(flex: 100,):null,
         (click_prof)?Container(
+
+
           height: MediaQuery.of(context).size.height/8,
           child:Container(
             margin: const EdgeInsets.only( right: 10.0),
             height: 160,
-            width: MediaQuery.of(context).size.width/4,
+            width: MediaQuery.of(context).size.width/3.5,
             padding: const EdgeInsets.only(left: 12.0, right: 12.0),
-            decoration: BoxDecoration(
-                color: Color.fromRGBO(255, 255, 255, 1),
-//                border: Border.all(color: Colors.deepPurple,width: 2),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(10),
-                  bottomLeft: Radius.circular(10),
-                  bottomRight: Radius.circular(10),
-                  topRight: Radius.circular(10),
-                )),
+
+            decoration: ShapeDecoration(
+              color: Colors.grey[200],
+              shape: TooltipShapeBorder(arrowArc: 0.5),
+              shadows: [
+                BoxShadow(
+                    color: Colors.black26, blurRadius: 4.0, offset: Offset(2, 2))
+              ],
+            ),
 
             child: Column(
               children: [
@@ -67,7 +113,7 @@ class _CustomBottomBarState extends State<CustomBottomBar> {
                   },
                   child: AutoSizeText('Account list',
                     textAlign: TextAlign.center,
-                    maxLines: 1,
+                    // maxLines: 1,
 
 
 
@@ -98,7 +144,7 @@ class _CustomBottomBarState extends State<CustomBottomBar> {
                   },
                   child: AutoSizeText('Add account',
                     textAlign: TextAlign.center,
-                    maxLines: 1,
+                    // maxLines: 1,
 
 
 
@@ -153,25 +199,36 @@ class _CustomBottomBarState extends State<CustomBottomBar> {
 
                   icon:Icon(Icons.info_outlined),
                   onPressed: () {
+
                     widget.controller.animateTo(0);
+
                   },
                   iconSize:40.0,
 
 
                 ),
-                IconButton(icon:Icon(Icons.account_circle_outlined),onPressed: () {
-                  widget.controller.animateTo(1);
-                },
-                  iconSize:40.0,
-                ),
+                // IconButton(icon:Icon(Icons.account_circle_outlined),onPressed: () {
+                //   print('hi');
+                //   widget.callback();
+                //   widget.controller.animateTo(1);
+                // },
+                //   iconSize:40.0,
+                // ),
                 IconButton(icon:Icon(Icons.widgets_outlined),
                   onPressed: () {
+                    print('hi');
+                    widget.callback();
+
                     widget.controller.animateTo(2);
+
                   },
                   iconSize:40.0,
                 ),
 
-                IconButton(icon:CircleAvatar(backgroundImage: (widget.prof_img_url!=null)?NetworkImage(widget.prof_img_url):widget.prof_img,
+                IconButton(icon:CircleAvatar(child: (widget.prof_img_url!=null)?CachedNetworkImage(imageUrl:widget.prof_img_url,placeholder: (context, url) => CircularProgressIndicator(),imageBuilder: (context, imageProvider) => CircleAvatar(
+    radius: 50,
+    backgroundImage: imageProvider,
+    ),errorWidget: (context, url, error) => Icon(Icons.error)):widget.prof_img,
 
                 ),
                   onPressed: () {

@@ -18,7 +18,7 @@ Future<Map<String, dynamic>> two_steps ( String username,String password,String 
 
   //print("Body: " + body);
 
-  var response = await http.post(url,
+  var response = await http.post(Uri.parse(url),
       headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
       body: body
   );
@@ -37,7 +37,7 @@ Future<Map<String, dynamic>> login_web ( String username,String password,String 
 
   //print("Body: " + body);
 
-  var response = await http.post(url,
+  var response = await http.post(Uri.parse(url),
       headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
       body: body
   );

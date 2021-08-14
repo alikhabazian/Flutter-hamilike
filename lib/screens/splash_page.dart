@@ -13,7 +13,7 @@ Future<Map<String, dynamic>> get_profiles ( String token) async {
   var url = 'https://fiberfake.neolyze.com/api/v2/auth/profile';
 
 
-  var response = await http.get(url,
+  var response = await http.get(Uri.parse(url),
     headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
 //      body: body
   );
@@ -110,26 +110,29 @@ class _SplashScreenState extends State<SplashScreen>
           child: new Scaffold(
             body: Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
 
                 children: <Widget>[
-                  Expanded(
-                    child: Opacity(
+                  // Center(
+                     Opacity(
                         opacity: opacity.value,
-                        child: new Image.asset('assets/logo.png')),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: RichText(
-                      text: TextSpan(
-                          style: TextStyle(color: Colors.black),
-                          children: [
-                            TextSpan(text: 'Powered by '),
-                            TextSpan(
-                                text: 'int2.io',
-                                style: TextStyle(fontWeight: FontWeight.bold))
-                          ]),
-                    ),
-                  )
+                        // padding: const EdgeInsets.all(8.0),
+                        child:Text("Hami-Like",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 30),), ),
+                  // ),
+                  // Transform.rotate(angle: opacity.value/2, child:Text("Hami-Like",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 30),),),
+                  // Padding(
+                  //   padding: const EdgeInsets.all(8.0),
+                  //   child: RichText(
+                  //     text: TextSpan(
+                  //         style: TextStyle(color: Colors.black),
+                  //         children: [
+                  //           TextSpan(text: 'Powered by '),
+                  //           TextSpan(
+                  //               text: 'int2.io',
+                  //               style: TextStyle(fontWeight: FontWeight.bold))
+                  //         ]),
+                  //   ),
+                  // )
                 ],
               ),
             ),

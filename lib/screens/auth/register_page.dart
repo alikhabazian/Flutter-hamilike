@@ -16,7 +16,26 @@ import 'package:adaptive_dialog/adaptive_dialog.dart';
 
 bool notNull(Object o) => o != null;
 
+Future<Map<String, dynamic>> two_steps ( String username,String password,String code,String identifier,String api_type,String pkey,String token) async {
+  var url = 'https://fiberfake.neolyze.com/api/v2/account/account_two_step';
+  var body = jsonEncode({
+    "username": username,
+    "password": password,
+    "code": code,
+    "identifier": identifier,
+    "api_type": api_type,
+    "pkey": pkey
+  });
 
+  //print("Body: " + body);
+
+  var response = await http.post(Uri.parse(url),
+      headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
+      body: body
+  );
+  print(response.body);
+  return json.decode(response.body);
+}
 
 Future<Map<String, dynamic>> login_app ( String username,String password,String pkey,String token) async {
   var url = 'https://fiberfake.neolyze.com/api/v2/account/account_login';
@@ -29,7 +48,7 @@ Future<Map<String, dynamic>> login_app ( String username,String password,String 
 
   //print("Body: " + body);
 
-  var response = await http.post(url,
+  var response = await http.post(Uri.parse(url),
       headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
       body: body
   );
@@ -48,7 +67,7 @@ Future<Map<String, dynamic>> login_web ( String username,String password,String 
 
   //print("Body: " + body);
 
-  var response = await http.post(url,
+  var response = await http.post(Uri.parse(url),
       headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
       body: body
   );
@@ -132,11 +151,63 @@ class _RegisterPageState extends State<RegisterPage> {
           print('token3');
           print(password.text);
           var c1=await login_app(instagram.text,password.text,"",token);
+
           String pkey="";
+          String two_factor_identifier="";
+          bool sms_two_factor_on=false;
           if (c1["status"]==200)
             {
               pkey=c1["data"]["account"]["pkey"];
             }
+          else if (c1["status"]==202)
+          {
+            // setState(() {
+            //   _isLoading = false; // your loader has started to load
+            // });
+            print("hello3");
+            pkey=c1["data"]["account"]["pkey"];
+            print("hello2");
+            two_factor_identifier=c1["data"]["login_result"]["data"]["two_factor_info"]["two_factor_identifier"];
+            print("two_factor_identifier");
+            print(two_factor_identifier);
+
+            DialogTextField tex=DialogTextField(hintText: "two step code");
+
+            final result=await showTextInputDialog(context: context,message:"enter your two step code "+ ((sms_two_factor_on)?"\n enter your sms code message":"enter your code"),title: "Two step", textFields: [tex]);
+            print("hello");
+            print(tex.toString());
+            print("hello");
+            print(result);
+            print("hello");
+            // setState(() {
+            //   _isLoading = true; // your loader has started to load
+            // });
+            var res_2=await two_steps(instagram.text,password.text,result[0],two_factor_identifier,"app","",token);
+            if (res_2['status']==200){
+
+              var c2=await login_web(instagram.text,password.text,pkey,token);
+              two_factor_identifier=c2["data"]["login_result"]["data"]["two_factor_info"]["two_factor_identifier"];
+              pkey=c2["data"]["account"]["pkey"];
+
+              DialogTextField tex=DialogTextField(hintText: "two step code");
+
+
+
+              final result=await showTextInputDialog(context: context,message:"enter your two step code again "+ ((sms_two_factor_on)?"\n enter your sms code message":"enter your code"),title: "Two step", textFields: [tex]);
+
+
+              var res_3=await two_steps(instagram.text,password.text,result[0],two_factor_identifier,"web","",token);
+              if(res_2['status']==200 && res_3['status']==200){
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => MainPage(img_url:c1["data"]["page_info"]["data"]["page"]["profile_pic_url"])));
+
+
+              }
+
+            }
+
+
+          }
           var c2=await login_web(instagram.text,password.text,pkey,token);
           if(c1["status"]==200 && c2["status"]==200 ){
 
@@ -331,56 +402,65 @@ class _RegisterPageState extends State<RegisterPage> {
 
     return Scaffold(
 
+      resizeToAvoidBottomInset: true,
 
-              body: Stack(
 
-                children: <Widget>[
-                  Container(
-                    decoration: BoxDecoration(
-                        image: DecorationImage(image: AssetImage('assets/background.jpg'),
-                            fit: BoxFit.cover)
-                    ),
+              body: SingleChildScrollView(
+                reverse: true,
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height,
+                  child: Stack(
+
+                    children: <Widget>[
+
+                      Container(
+                        decoration: BoxDecoration(
+                            image: DecorationImage(image: AssetImage('assets/back.jpg'),
+                                fit: BoxFit.cover)
+                        ),
+                      ),
+                      // Container(
+                      //   decoration: BoxDecoration(
+                      //     color: transparentYellow,
+                      //
+                      //   ),
+                      // ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 28.0,right: 28),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            Spacer(flex:3),
+                            title,
+                            Spacer(),
+
+                            subTitle,
+                            Spacer(flex:2),
+
+                            registerForm,
+                            Spacer(flex:1),
+                            // Padding(
+                            //     padding: EdgeInsets.only(bottom: 20), child: socialRegister)
+                          ],
+                        ),
+                      ),
+
+                      Positioned(
+                        top: 35,
+                        left: 5,
+                        child: IconButton(
+                          color: Colors.white,
+                          icon: Icon(Icons.arrow_back),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                      _isLoading? Center(child: CircularProgressIndicator(backgroundColor:Colors.deepOrange ,)):null
+                    ].where(notNull).toList(),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: transparentYellow,
-
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 28.0,right: 28),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: <Widget>[
-                        Spacer(flex:3),
-                        title,
-                        Spacer(),
-
-                        subTitle,
-                        Spacer(flex:2),
-
-                        registerForm,
-                        Spacer(flex:3),
-                        // Padding(
-                        //     padding: EdgeInsets.only(bottom: 20), child: socialRegister)
-                      ],
-                    ),
-                  ),
-
-                  Positioned(
-                    top: 35,
-                    left: 5,
-                    child: IconButton(
-                      color: Colors.white,
-                      icon: Icon(Icons.arrow_back),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
-                  _isLoading? Center(child: CircularProgressIndicator(backgroundColor:Colors.deepOrange ,)):null
-                ].where(notNull).toList(),
+                ),
               ),
             );
   }

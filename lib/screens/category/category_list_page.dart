@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
 
 
 
@@ -29,7 +30,7 @@ Future<Map<String, dynamic>> get_action ( String token) async {
 
   //print("Body: " + body);
 
-  var response = await http.get(url,
+  var response = await http.get(Uri.parse(url),
     headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
 //      body: body
   );
@@ -50,7 +51,7 @@ Future<Map<String, dynamic>> action ( String type,String pkey,String short_code,
 
   print("Body: " + body);
 
-  var response = await http.post(url,
+  var response = await http.post(Uri.parse(url),
       headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
       body: body
   );
@@ -146,12 +147,20 @@ class _CategoryListPageState extends State<CategoryListPage> {
     Map data=response["data"];
 
     if(data.containsKey("post_like")){
+      print('salam1');
       type_of_action='Like';
       type='post_like';
       shortcode=data['post_like'] ['info']['post']["shortcode"];
-      image=data['post_like'] ['info']['post']["media_url"];
+      if (data['post_like']['info']['post']["media_url"] is String) {
+        image=data['post_like'] ['info']['post']["media_url"];
+      }
+      else{
+        image = data['post_like'] ['info']['post']["media_url"][0]["media_url"];
+      }
+
       media_id=data['post_like'] ['info']['post']["media_id"];
     }else if(data.containsKey('account_follow')){
+      print('salam2');
       type_of_action='Follow';
       type='account_follow';
       pkey=data["account_follow"]['pkey'];
@@ -160,10 +169,17 @@ class _CategoryListPageState extends State<CategoryListPage> {
 
 
     }else if(data.containsKey('post_comment')){
+      print('salam3');
       type_of_action='comment';
       type='post_comment';
       shortcode=data['post_comment'] ['info']['post']["shortcode"];
-      image=data['post_comment'] ['info']['post']["media_url"];
+      print((data['post_comment'] ['info']['post']["media_url"] is String));
+      if (data['post_comment'] ['info']['post']["media_url"] is String) {
+        image = data['post_comment'] ['info']['post']["media_url"];
+      }
+      else{
+        image = data['post_comment'] ['info']['post']["media_url"][0]["media_url"];
+      }
       pkey=data["post_comment"]['pkey'];
       media_id=data["post_comment"]['info']['post']["media_id"];
 
@@ -225,9 +241,12 @@ class _CategoryListPageState extends State<CategoryListPage> {
 
   List<Category> searchResults;
   TextEditingController searchController = TextEditingController();
+
 @override
   void setState(fn){
   // asyncMethod();
+  searchController.clear();
+  print('hi');
   print('$image');
     // TODO: implement setState
     super.setState(fn);
@@ -340,26 +359,18 @@ class _CategoryListPageState extends State<CategoryListPage> {
                           Container(
                             margin: const EdgeInsets.only(top: 10,),
                             height: (MediaQuery.of(context).size.width)-64.0,
-                            child:Container(
-
-                              height: (MediaQuery.of(context).size.width)-64.0,
-                              width: MediaQuery.of(context).size.width-64.0,
-                              padding: const EdgeInsets.only(left: 12.0,top: 12.0, right: 12.0),
-                              decoration: BoxDecoration(
-                                  color: Colors.red[300],
-//                border: Border.all(color: Colors.deepPurple,width: 2),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(10),
-                                    bottomLeft: Radius.circular(10),
-                                    bottomRight: Radius.circular(10),
-                                    topRight: Radius.circular(10),
-                                  )),
-
-                              child: Center(
-                                child: _isLoading? Center(child: CircularProgressIndicator(backgroundColor:Colors.deepOrange ,)):Column(
-                                   mainAxisSize : MainAxisSize.min,
-                                  children: [
-                                    (image!=null)?Container(width:MediaQuery.of(context).size.width*0.7 ,height:MediaQuery.of(context).size.width*0.7 ,child: FittedBox(fit:BoxFit.cover,child: Image(image: NetworkImage(image)))):null,
+                            child:Center(
+                              child: _isLoading? Center(child: CircularProgressIndicator(backgroundColor:Colors.deepOrange ,)):Column(
+                                 mainAxisSize : MainAxisSize.min,
+                                children: [
+                                  (image!=null)?Container(width:MediaQuery.of(context).size.width*0.7 ,height:MediaQuery.of(context).size.width*0.7 ,child: FittedBox(fit:BoxFit.cover,child:
+                                    CachedNetworkImage(
+                                        imageUrl: image,
+                                        progressIndicatorBuilder: (context, url, downloadProgress) =>
+                                            CircularProgressIndicator(value: downloadProgress.progress),
+                                        errorWidget: (context, url, error) => Icon(Icons.error),
+                                      ),
+                                  )):null,
 //                                Text('Add New ID +',
 //                                  textAlign: TextAlign.center,
 //
@@ -378,8 +389,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
 //                                        )
 //                                      ]),
 //                                ),
-                                  ].where(notNull).toList(),
-                                ),
+                                ].where(notNull).toList(),
                               ),
                             ),
 
@@ -393,6 +403,12 @@ class _CategoryListPageState extends State<CategoryListPage> {
                             width: (MediaQuery.of(context).size.width)*0.85,
                             child: type_of_action=='comment'?new Scrollbar(
                                 child: new TextField(
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: 'Please enter your comment'
+                                  ),
+
+
                                   controller: searchController,
 
                                   maxLines: null,

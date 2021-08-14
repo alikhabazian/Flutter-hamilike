@@ -26,7 +26,7 @@ Future<Map<String, dynamic>> get_profile ( String token) async {
 
   //print("Body: " + body);
 
-  var response = await http.get(url,
+  var response = await http.get(Uri.parse(url),
     headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
 //      body: body
   );
@@ -79,7 +79,7 @@ Future<Map<String, dynamic>> setconfig ( String pkey
 
   print("Body: " + body);
 
-  var response = await http.post(url,
+  var response = await http.post(Uri.parse(url),
       headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
       body: body
   );

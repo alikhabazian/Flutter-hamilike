@@ -36,7 +36,7 @@ Future<Map<String, dynamic>> postRequest_verify ( String number,String code) asy
 
   //print("Body: " + body);
 
-  var response = await http.post(url,
+  var response = await http.post(Uri.parse(url),
       headers: {"accept": "application/json","Content-Type": "application/json-patch+json"},
       body: body
   );

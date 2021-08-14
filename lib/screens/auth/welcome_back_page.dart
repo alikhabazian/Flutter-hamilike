@@ -4,10 +4,30 @@ import 'package:repeat_mehrdadproject/screens/main/main_page.dart';
 import 'package:repeat_mehrdadproject/Custom_bottomBar.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:repeat_mehrdadproject/screens/settings/settings_page.dart';
 import 'register_page.dart';
 import 'dart:convert';
 // import 'package:popup_menu/popup_menu.dart';
 import 'package:http/http.dart' as http;
+import 'package:cached_network_image/cached_network_image.dart';
+
+
+
+
+Future<Map<String, dynamic>> delete_profiles ( String token,String pkey) async {
+  var url = 'https://fiberfake.neolyze.com/api/v2/account/account_delete';
+  var body = jsonEncode({
+    "pkey": pkey
+  });
+
+  var response = await http.delete(Uri.parse(url),
+    headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
+     body: body
+  );
+  print('hi');
+  print(response.body);
+  return json.decode(response.body);
+}
 
 class AdaptiveTextSize {
   const AdaptiveTextSize();
@@ -27,28 +47,49 @@ class Const{
 }
 
 
-class options_login extends StatelessWidget {
-  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  options_login(this.index,this.pkey,this.username,this.image_p,this.full_name);
+class options_login extends StatefulWidget {
 
+  options_login(this.index,this.pkey,this.username,this.image_p,this.full_name,this.father);
+  final father;
   final String pkey;
   final int index;
   final String username;
   final String image_p;
   final String full_name;
 
+  @override
+  _options_loginState createState() => _options_loginState();
+}
+
+class _options_loginState extends State<options_login> {
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
   void choice(String Ch)async{
     if(Ch=='Edit configuration'){
+      final SharedPreferences prefs = await _prefs;
+
+      prefs.setInt('index', widget.index);
+      Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => SettingsPage()));
 
     }
     else if(Ch=='Set Default'){
       final SharedPreferences prefs = await _prefs;
 
-      prefs.setInt('Default', index);
+      prefs.setInt('Default', widget.index);
 
 
     }
     else if(Ch=='Delete Account'){
+      final SharedPreferences prefs = await _prefs;
+      var token=prefs.getString('token');
+      var response=await delete_profiles(token,widget.pkey);
+      if(response["success"]){
+        widget.father.asyncMethod();
+      }
+
+
+
 
     }
   }
@@ -58,13 +99,13 @@ class options_login extends StatelessWidget {
     return InkWell(
         onTap:() async{
           final SharedPreferences prefs = await _prefs;
-          prefs.setString('pkey', this.pkey);
-          prefs.setInt('index', this.index);
+          prefs.setString('pkey', this.widget.pkey);
+          prefs.setInt('index', this.widget.index);
           // Navigator.of(context).pushNamedAndRemoveUntil()
           Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
-                  builder: (context) => MainPage(img_url: image_p, username: username,)
+                  builder: (context) => MainPage(img_url: widget.image_p, username: widget.username,)
               ),
               ModalRoute.withName("/Home")
           );
@@ -99,7 +140,18 @@ class options_login extends StatelessWidget {
               children: [
                 CircleAvatar(
                   maxRadius: 40,
-                  backgroundImage: NetworkImage(image_p),
+                  child: CachedNetworkImage(
+                    imageUrl: widget.image_p,
+                    progressIndicatorBuilder: (context, url, downloadProgress) =>
+                        CircularProgressIndicator(value: downloadProgress.progress),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
+                    imageBuilder: (context, imageProvider) => CircleAvatar(
+                      radius: 50,
+                      backgroundImage: imageProvider,
+                    ),
+                  ),
+                  // backgroundImage: ,
+                  // backgroundImage: NetworkImage(image_p),
                 ),
 
                 Column(
@@ -127,8 +179,8 @@ class options_login extends StatelessWidget {
 //                            )
 //                          ]),
 //                    ),
-                    Text(username,style: TextStyle(fontSize:
-                    AdaptiveTextSize().getadaptiveTextSize(context, (username.length<15)?20:15),
+                    Text(widget.username,style: TextStyle(fontSize:
+                    AdaptiveTextSize().getadaptiveTextSize(context, (widget.username.length<15)?20:15),
                         color: Colors.black,
                         fontWeight: FontWeight.w900,
                         shadows: [
@@ -141,7 +193,7 @@ class options_login extends StatelessWidget {
                     )
                     ),
                     Text(
-                      full_name,
+                      widget.full_name,
                       textAlign: TextAlign.center,
                       style: TextStyle(
 
@@ -190,7 +242,7 @@ Future<Map<String, dynamic>> get_profiles ( String token) async {
   var url = 'https://fiberfake.neolyze.com/api/v2/auth/profile';
 
 
-  var response = await http.get(url,
+  var response = await http.get(Uri.parse(url),
     headers: {"accept": "application/json","Content-Type": "application/json-patch+json","Authorization":token},
 //      body: body
   );
@@ -269,6 +321,11 @@ class _WelcomeBackPageState extends State<WelcomeBackPage> {
   ImageProvider ss;
   var sss=0;
 
+
+
+
+
+
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   TextEditingController email =
       TextEditingController(text: 'example@email.com');
@@ -276,6 +333,7 @@ class _WelcomeBackPageState extends State<WelcomeBackPage> {
   TextEditingController password = TextEditingController(text: '12345678');
 
   void asyncMethod() async {
+
     setState(() {
       _isLoading = true; // your loader has started to load
     });
@@ -451,9 +509,7 @@ class _WelcomeBackPageState extends State<WelcomeBackPage> {
 //          ss=NetworkImage(im_url);
 //
 //
-//         setState(() {
-//
-//         });
+
 
 
 
@@ -629,7 +685,7 @@ class _WelcomeBackPageState extends State<WelcomeBackPage> {
                   print(x);
                   print(x["username"]);
                   // return options_login(index,x["username"],x["data"]['page']['profile_pic_url'],x["data"]['page']['full_name']);
-                  return options_login(index,x['pkey'],x["username"],x['avatar']??'https://scontent-syd2-1.cdninstagram.com/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=scontent-syd2-1.cdninstagram.com&_nc_ohc=b2E2ZiBMGFwAX_pErM9&edm=AL4D0a4BAAAA&ccb=7-4&oh=f02011f9911c912f654ba0b3ed145d12&oe=60B1C54F&_nc_sid=712cc3&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2-ccb7-4',x["username"]);
+                  return options_login(index,x['pkey'],x["username"],x['avatar']??'https://scontent-syd2-1.cdninstagram.com/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=scontent-syd2-1.cdninstagram.com&_nc_ohc=b2E2ZiBMGFwAX_pErM9&edm=AL4D0a4BAAAA&ccb=7-4&oh=f02011f9911c912f654ba0b3ed145d12&oe=60B1C54F&_nc_sid=712cc3&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2-ccb7-4',x["username"],this);
                 }
 
             ),

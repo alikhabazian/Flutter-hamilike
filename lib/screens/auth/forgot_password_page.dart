@@ -20,7 +20,7 @@ Future<Map<String, dynamic>> postRequest ( String number) async {
 
   //print("Body: " + body);
 
-  var response = await http.post(url,
+  var response = await http.post(Uri.parse(url),
       headers: {"accept": "application/json","Content-Type": "application/json-patch+json"},
       body: body
       );
@@ -145,6 +145,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
                print(c.toString());
                if (c['success']==true ){
+
                  Navigator.of(context).push(MaterialPageRoute(builder:(_)=>ConfirmOtpPage(number:'0'+phoneNumber.text )));
 
              }
